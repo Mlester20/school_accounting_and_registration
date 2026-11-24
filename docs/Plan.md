@@ -128,10 +128,10 @@ Subjects already passed cannot be enrolled again. Subjects with a `5.0` can be r
 - [x] Role-based redirect after login
 - [x] Force password change on first login
 - [x] Schema: users, departments, programs, students, employees, department_employee (pivot)    
-- [ ] Registrar: create student accounts (single and bulk) from the master list, department-scoped
+- [x] Registrar: create student accounts (single and bulk) from the master list, department-scoped
 - [ ] Registrar: create faculty accounts only inside assigned departments
 - [ ] Admin: create registrar/accounting/admin accounts
-- [ ] Registrar: edit/deactivate accounts, reset password (in scope only)
+- [ ] Registrar: edit/deactivate accounts, reset password (in scope only) — *NOT fully done: account **creation** works (single + bulk, department-scoped); password reset and activate/deactivate endpoints exist and work, but the full account-management surface (e.g. admin-side flows, faculty accounts) is not complete. Leave unchecked until faculty/staff account management ships.*
 - [ ] Bulk import students from CSV/Excel
 - [x] Tests: each role can only reach its own routes (RbacTest - 10 tests passing)
 
@@ -206,3 +206,4 @@ Subjects already passed cannot be enrolled again. Subjects with a `5.0` can be r
 |---|---|---|
 | 2026-11-21 | Phase 0 Setup complete; Phase 1 foundation (schema, models, roles/permissions, seeders, factories, RbacTest) complete. All 10 new RBAC tests pass (26 assertions). `migrate:fresh --seed` runs cleanly. | Phase 1 Step 2: Login/auth pages, remove registration/email verification, role-based redirect, force password change |
 | 2026-11-22 | Phase 1 Step 2 (AUTH ONLY) complete: login by user_id with throttling (5 attempts), authentication with status='active', session regeneration, last_login_at, activitylog for staff, removed registration/email verification/password reset routes/controllers/pages/tests, removed verified middleware, EnsurePasswordIsChanged middleware, force change password page with validation, role-based redirect (admin>registrar>accounting>faculty>student), role-protected placeholder pages, Inertia shared props, profile page (read-only user_id/full_name/roles, password update only), confirm-password kept, Password::defaults() in AppServiceProvider, EnsureUserIsActive middleware. All 59 tests pass (152 assertions). | Phase 1 Step 3: Registrar account management (create student/faculty accounts, department-scoped) |
+| 2026-11-24 | Phase 1 Step 3a (Registrar student master list + student accounts) complete: StudentController (index/create/store/show/edit/update) with `visibleTo` scoping, LIKE-wildcard escaping, eager loading, `withQueryString()`, stable ordering; StudentAccountController (single/bulk create, reset password, status toggle); Actions in `app/Actions/Accounts` (row-locked, audit-logged, no passwords in logs); StudentPolicy + UserPolicy; StoreStudentRequest/UpdateStudentRequest/BulkStudentAccountRequest (max 200, distinct, integer ids); StudentResource; Registrar/Students Inertia pages (Index/Create/Edit/Show) + CredentialsModal + ConfirmActionModal; Students nav link for registrar; temp-password delivery via Inertia flash with `session()->pull()` (single consumption, documented in Project.md); reset/status on account-less students → 422 with clear message (enforced in Actions, policy checks permission+scope only). 80 registrar/policy tests pass. | Phase 1 remainder (full build + suite), then Phase 1 login page redesign + root URL behavior |

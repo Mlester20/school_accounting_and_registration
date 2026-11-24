@@ -76,6 +76,20 @@ php artisan migrate:fresh --seed   # DEV ONLY. Never in production
 - Account creation goes through the Actions in `app/Actions/Accounts`. They authorize internally, generate a random temporary password, set `must_change_password`, and audit-log. The temporary password is shown once and never stored in plain text.
 - The `hashed` cast on `User::password` hashes automatically. Pass the plain password to `User::create()`; do not call `Hash::make()` first.
 
+### Temporary password delivery (Inertia flash, decided)
+
+How a newly created or reset temporary password reaches the registrar's screen:
+
+1. The Action returns the plain temp password **only to the controller** (in-memory, same request).
+2. The controller flashes it to the session and redirects, e.g. `redirect(...)->with('credentials', [$result])` (bulk: `bulk_credentials` + `bulk_failed`).
+3. On the next request (the index/show page), the controller reads it with **`session()->pull('credentials')`** — `pull()` deletes the value as it reads it, so the session copy is consumed **exactly once** — then hands it to **`Inertia::flash('credentials', ...)`**.
+4. Inertia merges flashed data into the page object's **top-level `flash` key** (not a prop). The Inertia client **never persists `flash` into browser history state** (Back/refresh restore `flash: {}`), so credentials cannot reappear via Back or reload. `CredentialsModal` reads `usePage().flash` and shows the data once with Print/Download buttons.
+5. Closing the modal calls `router.flash({ credentials: null, ... })` to drop it from client state; the plain password is **never** written to the database (only the hash, via the `hashed` cast), **never** logged in `activity_log`, and is gone from the session after the one read.
+
+Consequences:
+- If the registrar navigates away without viewing the modal (or the browser crashes), the temp password is lost — the only recovery is another password reset. Accepted tradeoff for not persisting plain credentials.
+- The tests `credentials_flash_is_consumed_after_next_request` (StudentAccountTest) and `credentials_flash_key_absent_on_next_request_to_same_page` (StudentControllerTest) assert the one-time delivery; keep them passing if the delivery mechanism changes.
+
 ## 6. Grading rules (critical)
 
 Allowed values: `1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 5.0, INC, DROPPED`

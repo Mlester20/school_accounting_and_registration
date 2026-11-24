@@ -2,12 +2,12 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, useForm } from '@inertiajs/react';
+import AuthSplitLayout from '@/Layouts/AuthSplitLayout';
+import { Head, router, useForm } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 
 export default function ForceChangePassword({ status }) {
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         current_password: '',
         password: '',
         password_confirmation: '',
@@ -16,24 +16,18 @@ export default function ForceChangePassword({ status }) {
     const submit = (e) => {
         e.preventDefault();
 
-        put(route('password.change'), {
+        post(route('password.change'), {
             onFinish: () => setData('password', 'password_confirmation'),
         });
     };
 
     return (
-        <GuestLayout>
+        <AuthSplitLayout
+            status={status}
+            title="Change your password"
+            subtitle="You must change your password before continuing."
+        >
             <Head title="Change Password" />
-
-            {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
-
-            <div className="mb-4 text-sm text-gray-600">
-                You must change your password before continuing.
-            </div>
 
             <form onSubmit={submit}>
                 <div>
@@ -85,12 +79,22 @@ export default function ForceChangePassword({ status }) {
                     <InputError message={errors.password_confirmation} className="mt-2" />
                 </div>
 
-                <div className="mt-4 flex items-center justify-end">
-                    <PrimaryButton className="ms-4" disabled={processing}>
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row-reverse sm:items-center">
+                    <PrimaryButton disabled={processing} className="w-full sm:w-auto sm:justify-center">
                         Change Password
                     </PrimaryButton>
+
+                    {/* Sign out — EnsurePasswordIsChanged lets route('logout')
+                        through while must_change_password is true. */}
+                    <button
+                        type="button"
+                        onClick={() => router.post(route('logout'))}
+                        className="w-full text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 sm:w-auto sm:text-left"
+                    >
+                        Sign out
+                    </button>
                 </div>
             </form>
-        </GuestLayout>
+        </AuthSplitLayout>
     );
 }

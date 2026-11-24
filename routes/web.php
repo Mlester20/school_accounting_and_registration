@@ -2,17 +2,19 @@
 
 use App\Enums\UserRole;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
+use App\Http\Controllers\Registrar\StudentController;
+use App\Http\Controllers\Registrar\StudentAccountController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+// Root URL: guests go to the login page, authenticated users to their
+// role dashboard (via the /dashboard redirect below).
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => false,
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    $user = auth()->user();
+
+    return $user
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
 });
 
 /**
@@ -59,6 +61,22 @@ Route::middleware(['auth', 'password.changed', 'active', 'role:registrar'])->pre
     Route::get('/', function () {
         return Inertia::render('Registrar/Dashboard');
     })->name('dashboard');
+
+    Route::resource('students', StudentController::class)
+        ->only(['index', 'create', 'store', 'show', 'edit', 'update'])
+        ->parameters(['students' => 'student']);
+
+    Route::post('students/{student}/account', [StudentAccountController::class, 'store'])
+        ->name('students.account.store')
+        ->whereNumber('student');
+    Route::post('students/accounts/bulk', [StudentAccountController::class, 'bulkStore'])
+        ->name('students.accounts.bulk');
+    Route::post('students/{student}/account/reset-password', [StudentAccountController::class, 'resetPassword'])
+        ->name('students.account.reset-password')
+        ->whereNumber('student');
+    Route::put('students/{student}/account/status', [StudentAccountController::class, 'updateStatus'])
+        ->name('students.account.status')
+        ->whereNumber('student');
 });
 
 // Accounting area

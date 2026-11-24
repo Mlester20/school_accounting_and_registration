@@ -42,6 +42,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     Dashboard
                                 </NavLink>
+                                {user?.roles?.includes('registrar') && (
+                                    <NavLink
+                                        href={route('registrar.students.index')}
+                                        active={route().current('registrar.students.*')}
+                                    >
+                                        Students
+                                    </NavLink>
+                                )}
                             </div>
                         </div>
 
@@ -146,6 +154,14 @@ export default function AuthenticatedLayout({ header, children }) {
                         >
                             Dashboard
                         </ResponsiveNavLink>
+                        {user?.roles?.includes('registrar') && (
+                            <ResponsiveNavLink
+                                href={route('registrar.students.index')}
+                                active={route().current('registrar.students.*')}
+                            >
+                                Students
+                            </ResponsiveNavLink>
+                        )}
                     </div>
 
                     <div className="border-t border-gray-200 pb-1 pt-4">

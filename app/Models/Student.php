@@ -108,4 +108,15 @@ class Student extends Model
         }
         return implode(' ', $parts);
     }
+
+    /**
+     * Check if the student's program belongs to any of the given department IDs.
+     */
+    public function isInDepartments(array $departmentIds): bool
+    {
+        if (empty($departmentIds)) {
+            return false;
+        }
+        return in_array($this->program?->department_id, $departmentIds, true);
+    }
 }
